@@ -35,5 +35,13 @@ namespace SuperIoTestProgram
             p.WaitForExit();
             p.Close();
         }
+
+        public long GetTime()
+        {
+            DateTime dd = new DateTime(1970, 1, 1, 0, 0, 0, 0);
+            DateTime timeUTC = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Utc);//本地时间转成UTC时间
+            TimeSpan ts = (timeUTC - dd);
+            return (Int64)ts.TotalMilliseconds;//精确到毫秒
+        }
     }
 }
