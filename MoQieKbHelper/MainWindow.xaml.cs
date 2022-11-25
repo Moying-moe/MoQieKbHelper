@@ -608,7 +608,7 @@ namespace MoQieKbHelper
         {
             if (e.ChangedButton == MouseButton.Left)
             {
-                Tools.Instance.OpenUrlInBrowser("https://github.com/Moying-moe/");
+                Tools.Instance.OpenUrlInBrowser("https://github.com/Moying-moe/MoQieKbHelper/");
             }
         }
 
