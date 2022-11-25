@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.1525
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoQieKbHelper", "MoQieKbHelper.csproj", "{FF66ED24-2B35-4071-A915-8955DB27FCF4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoQieKbHelper", "./MoQieKbHelper/MoQieKbHelper.csproj", "{FF66ED24-2B35-4071-A915-8955DB27FCF4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
