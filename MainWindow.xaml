@@ -23,7 +23,7 @@
             <TextBlock x:Name="LabelLog" TextWrapping="Wrap" Text="" FontSize="12" VerticalAlignment="Bottom"/>
         </Label>-->
         <TextBox x:Name="Tb_KeyInput" GotFocus="Tb_KeyInput_GotFocus" LostFocus="Tb_KeyInput_LostFocus" KeyDown="Tb_KeyInput_KeyDown"
-                 Grid.Row="0" Grid.Column="0" Margin="15,5" IsReadOnly="True" IsUndoEnabled="False" FontSize="15"
+                 Grid.Row="0" Grid.Column="0" Margin="15,5" IsReadOnly="True" IsUndoEnabled="False" FontSize="15" InputMethod.IsInputMethodEnabled="False"
                  HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontFamily="Microsoft YaHei" Text="点此输入按键"></TextBox>
         
         <Grid Grid.Row="0" Grid.Column="1" Margin="15,5">
@@ -39,7 +39,7 @@
         <ListBox x:Name="Lb_KeyList" Grid.Row="1" Grid.Column="0" Margin="15,5">
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <Grid Margin="0,2" Height="23">
+                    <Grid Margin="0,2" Height="25">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="20" />
                             <ColumnDefinition Width="*" />
@@ -49,7 +49,7 @@
                                 <ScaleTransform ScaleX="1" ScaleY="1.1" />
                             </CheckBox.LayoutTransform>
                         </CheckBox>
-                        <Label FontSize="13" Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Content="{Binding KeyString}"></Label>
+                        <Label FontSize="13" Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Content="{Binding KeyString}" ClipToBounds="False"></Label>
                     </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>
@@ -66,7 +66,7 @@
                 <ColumnDefinition Width="1*" />
             </Grid.ColumnDefinitions>
 
-            <Button Click="Btn_MarcoWebsite_Click" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">一键宏查询</Button>
+            <Button x:Name="Btn_MarcoWebsite" Click="Btn_MarcoWebsite_Click" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">一键宏查询</Button>
             <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,10">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="1*" />
@@ -74,7 +74,7 @@
                     <RowDefinition Height="1*" />
                     <RowDefinition Height="1*" />
                     <RowDefinition Height="1*" />
-                    <RowDefinition Height="20" />
+                    <RowDefinition Height="24" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="2*" />
@@ -86,18 +86,20 @@
                 <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">停 止 键</Label>
                 <Button x:Name="Btn_SetStopKey" Click="Btn_SetStopKey_Click" Grid.Row="1" Grid.Column="1" Margin="0,3" FontSize="11">XBUTTON2</Button>
                 <Label Grid.Row="2" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">暂 停 键</Label>
-                <Button x:Name="Btn_SetPauseKey" Click="Btn_SetPauseKey_Click" Grid.Row="2" Grid.Column="1" Margin="0,3" FontSize="11">LALT</Button>
+                <Button x:Name="Btn_SetPauseKey" Click="Btn_SetPauseKey_Click" Grid.Row="2" Grid.Column="1" Margin="0,3" FontSize="11" IsEnabled="False">LALT</Button>
                 <Label Grid.Row="3" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">按键模式</Label>
-                <ComboBox x:Name="Cb_KeyMode" Grid.Row="3" Grid.Column="1" Margin="0,3" SelectedIndex="0">
+                <ComboBox x:Name="Cb_KeyMode" Grid.Row="3" Grid.Column="1" Margin="0,3" SelectedIndex="0" IsEnabled="False">
                     <ComboBoxItem IsSelected="True">顺序模式</ComboBoxItem>
                     <ComboBoxItem>按压模式</ComboBoxItem>
                     <ComboBoxItem>武学助手模式</ComboBoxItem>
                 </ComboBox>
                 <Label Grid.Row="4" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">按键间隔</Label>
-                <TextBox x:Name="Tb_KeyInterval" Grid.Row="4" Grid.Column="1" Margin="0,3" VerticalAlignment="Center" Padding="5,4" TextAlignment="Center">50</TextBox>
-                <Label Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" FontSize="10">单击右侧按钮来设置快捷键 按Esc清除</Label>
+                <TextBox x:Name="Tb_KeyInterval" Grid.Row="4" Grid.Column="1" Margin="0,3" InputMethod.IsInputMethodEnabled="False"
+                         VerticalAlignment="Center" Padding="5,4" TextAlignment="Center"
+                         PreviewTextInput="Tb_KeyInterval_PreviewTextInput" TextChanged="Tb_KeyInterval_TextChanged" FontSize="12">50</TextBox>
+                <Label Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center">单击右侧按钮来设置快捷键 按Esc清除</Label>
             </Grid>
-            <CheckBox Grid.Row="2" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">声音提示</CheckBox>
+            <CheckBox x:Name="Cb_Sound" Grid.Row="2" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center" IsChecked="True">声音提示</CheckBox>
             <Button Grid.Row="2" Grid.Column="1" IsEnabled="False" FontSize="12">其他设置</Button>
         </Grid>
 

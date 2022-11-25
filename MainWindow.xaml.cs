@@ -9,6 +9,7 @@ using System.Windows.Input;
 using Key = SuperIo.SuperIo.Key;
 using System.Collections.ObjectModel;
 using Mouse = SuperIo.SuperIo.Mouse;
+using System.Text.RegularExpressions;
 
 namespace SuperIoTestProgram
 {
@@ -34,25 +35,42 @@ namespace SuperIoTestProgram
         private List<byte> _keys = new List<byte>();                         // 用户添加的需要按下的键
         private ObservableCollection<KeyListItem> _keyListItems = new ObservableCollection<KeyListItem>();   // 用户添加的需要按下的按键列表（显示在UI上）
 
+        private List<UIElement> _lockElement = new List<UIElement>();       // 启动时锁定的控件
+
         public MainWindow()
         {
             InitializeComponent();
 
             Lb_KeyList.ItemsSource = _keyListItems;
             TryAddKey(Key.VK_F9);
-            TryAddKey(Key.VK_F10);
+            TryAddKey(Key.VK_F10, false);
+            TryAddKey(Key.VK_Q, false);
+            TryAddKey(Key.VK_F1, false);
 
             ResetTooltip();
+
+            _lockElement.Add(Tb_KeyInput);
+            _lockElement.Add(Btn_AddKey);
+            _lockElement.Add(Btn_DeleteKeys);
+            _lockElement.Add(Btn_MarcoWebsite);
+            _lockElement.Add(Btn_SetStartKey);
+            _lockElement.Add(Btn_SetStopKey);
+            //_lockElement.Add(Btn_SetPauseKey);
+            //_lockElement.Add(Cb_KeyMode);
+            _lockElement.Add(Tb_KeyInterval);
+            _lockElement.Add(Cb_Sound);
+            _lockElement.Add(Lb_KeyList);
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            // 初始化
             #region 模块初始化
             bool soundInitFlag = Sound.Instance.ForceInitialize();
 
             bool keyboardInitFlag = SuperKeyboard.Instance.IsInitialized;
             bool hotkeyInitFlag = SuperEvent.Instance.IsInitialized;
+
+            SuperKeyboard.Instance.SetKeyPressDelay(33);
 
             if (!keyboardInitFlag)
             {
@@ -66,7 +84,7 @@ namespace SuperIoTestProgram
             }
             #endregion
 
-            timer.Interval = TimeSpan.FromMilliseconds(10);
+            timer.Interval = TimeSpan.FromMilliseconds(50);
             timer.Tick += Timer_Tick;
 
             #region 热键注册
@@ -155,6 +173,11 @@ namespace SuperIoTestProgram
         /// <returns></returns>
         private bool TryAddKey(byte keyCode)
         {
+            return TryAddKey(keyCode, true);
+        }
+
+        private bool TryAddKey(byte keyCode, bool enabled)
+        {
             if (_keys.Contains(keyCode))
             {
                 return false;
@@ -164,7 +187,7 @@ namespace SuperIoTestProgram
             _keyListItems.Add(new KeyListItem()
             {
                 KeyCode = keyCode,
-                Enabled = true,
+                Enabled = enabled,
                 KeyString = Key.GetKeyName(keyCode)
             });
             return true;
@@ -214,7 +237,14 @@ namespace SuperIoTestProgram
         private DispatcherTimer timer = new DispatcherTimer();
 
         private void Timer_Tick(object sender, EventArgs e) {
-            SuperKeyboard.Instance.KeyPress(Key.VK_F9);
+            foreach (KeyListItem item in _keyListItems)
+            {
+                if (item.Enabled)
+                {
+                    Console.WriteLine(item.KeyCode + "," + Key.GetKeyName(item.KeyCode));
+                    SuperKeyboard.Instance.KeyPress(item.KeyCode);
+                }
+            }
         }
         #endregion
 
@@ -232,7 +262,15 @@ namespace SuperIoTestProgram
                 _status = true;
                 timer.Start();
 
-                Sound.Instance.PlayStart();
+                foreach (UIElement element in _lockElement)
+                {
+                    element.IsEnabled = false;
+                }
+
+                if (Cb_Sound.IsChecked.Value)
+                {
+                    Sound.Instance.PlayStart();
+                }
             }
         }
 
@@ -250,7 +288,15 @@ namespace SuperIoTestProgram
                 _status = false;
                 timer.Stop();
 
-                Sound.Instance.PlayStop();
+                foreach (UIElement element in _lockElement)
+                {
+                    element.IsEnabled = true;
+                }
+
+                if (Cb_Sound.IsChecked.Value)
+                {
+                    Sound.Instance.PlayStop();
+                }
             }
         }
 
@@ -560,6 +606,23 @@ namespace SuperIoTestProgram
             {
                 Tools.Instance.OpenUrlInBrowser("https://github.com/Moying-moe/");
             }
+        }
+
+        private void Tb_KeyInterval_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            e.Handled = new Regex("[^0-9]+").IsMatch(e.Text);
+        }
+
+        private void Tb_KeyInterval_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+            int interval = 0;
+            if (!string.IsNullOrEmpty(Tb_KeyInterval.Text))
+            {
+                interval = int.Parse(Tb_KeyInterval.Text);
+            }
+            Tb_KeyInterval.Text = interval.ToString();
+
+            timer.Interval = TimeSpan.FromMilliseconds(interval);
         }
     }
 }
