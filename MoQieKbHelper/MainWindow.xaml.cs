@@ -18,6 +18,8 @@ namespace SuperIoTestProgram
     /// </summary>
     public partial class MainWindow : Window
     {
+        public static readonly string VERSION = "v0.1.0-alpha";
+
         private readonly SolidColorBrush Default_BtnBorder = new SolidColorBrush(Color.FromArgb(255, 112, 112, 112));
         private readonly SolidColorBrush Default_BtnBackground = new SolidColorBrush(Color.FromArgb(255, 221, 221, 221));
         private readonly SolidColorBrush Default_TextboxBackground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
@@ -40,6 +42,8 @@ namespace SuperIoTestProgram
         public MainWindow()
         {
             InitializeComponent();
+
+            this.Title = "墨切按键 - " + VERSION;
 
             Lb_KeyList.ItemsSource = _keyListItems;
             TryAddKey(Key.VK_F9);
