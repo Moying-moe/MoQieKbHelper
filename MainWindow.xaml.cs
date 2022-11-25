@@ -1,29 +1,14 @@
 ﻿using SuperIo;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
-using System.Linq;
-using System.Media;
-using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Forms;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Windows.Threading;
 using MessageBox = System.Windows.MessageBox;
-using static SuperIo.SuperIo;
 using System.Windows.Input;
 using Key = SuperIo.SuperIo.Key;
 using System.Collections.ObjectModel;
+using Mouse = SuperIo.SuperIo.Mouse;
 
 namespace SuperIoTestProgram
 {
@@ -32,6 +17,10 @@ namespace SuperIoTestProgram
     /// </summary>
     public partial class MainWindow : Window
     {
+        private readonly SolidColorBrush Default_BtnBorder = new SolidColorBrush(Color.FromArgb(255, 112, 112, 112));
+        private readonly SolidColorBrush Default_BtnBackground = new SolidColorBrush(Color.FromArgb(255, 221, 221, 221));
+        private readonly SolidColorBrush Default_TextboxBackground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+
         private class KeyListItem
         {
             public byte KeyCode { get; set; }
@@ -39,23 +28,17 @@ namespace SuperIoTestProgram
             public bool Enabled { get; set; }
         }
 
-
         private bool _status = false;
+        private long _toggleTime = 0;
 
-        private byte _lastHotkey = Key.VK_ADD;
-        private int _setKeyGHandlerId = -1;
-        private bool _setKeyCtrl = false;
-        private bool _setKeyAlt = false;
-        private bool _setKeyShift = false;
-
-        private List<byte> keys = new List<byte>();                         // 用户添加的需要按下的键
-        private ObservableCollection<KeyListItem> keyListItems = new ObservableCollection<KeyListItem>();   // 用户添加的需要按下的按键列表（显示在UI上）
+        private List<byte> _keys = new List<byte>();                         // 用户添加的需要按下的键
+        private ObservableCollection<KeyListItem> _keyListItems = new ObservableCollection<KeyListItem>();   // 用户添加的需要按下的按键列表（显示在UI上）
 
         public MainWindow()
         {
             InitializeComponent();
 
-            Lb_KeyList.ItemsSource = keyListItems;
+            Lb_KeyList.ItemsSource = _keyListItems;
             TryAddKey(Key.VK_F9);
             TryAddKey(Key.VK_F10);
 
@@ -87,19 +70,21 @@ namespace SuperIoTestProgram
             timer.Tick += Timer_Tick;
 
             #region 热键注册
-            SuperEvent.Instance.RegisterMouse(
-                mouseEvent: SuperIo.SuperIo.Mouse.XBUTTON1DOWN,
+            _startKeyIsMouse = true;
+            _startKeyId = SuperEvent.Instance.RegisterMouse(
+                mouseEvent: Mouse.XBUTTON1DOWN,
                 handler: ToolOn
             );
 
-            SuperEvent.Instance.RegisterMouse(
-                mouseEvent: SuperIo.SuperIo.Mouse.XBUTTON2UP,
+            _stopKeyIsMouse = true;
+            _stopKeyId = SuperEvent.Instance.RegisterMouse(
+                mouseEvent: Mouse.XBUTTON2UP,
                 handler: ToolOff
             );
             #endregion
         }
 
-        #region Tooltip
+        #region 提示文本
         /// <summary>
         /// 设置提示文本
         /// </summary>
@@ -119,7 +104,7 @@ namespace SuperIoTestProgram
         #endregion
 
         #region 添加按键
-        private byte lastAcceptKey = 0;
+        private byte _lastAcceptKey = 0;
 
         /// <summary>
         /// 在文本框中按下按键时，变更显示的内容
@@ -135,8 +120,8 @@ namespace SuperIoTestProgram
             }
             else
             {
-                lastAcceptKey = SuperEvent.Instance.LastPressKey;
-                Tb_KeyInput.Text = Key.GetKeyName(lastAcceptKey);
+                _lastAcceptKey = SuperEvent.Instance.LastPressKey;
+                Tb_KeyInput.Text = Key.GetKeyName(_lastAcceptKey);
             }
             e.Handled = true;
         }
@@ -159,7 +144,7 @@ namespace SuperIoTestProgram
         /// <param name="e"></param>
         private void Tb_KeyInput_LostFocus(object sender, RoutedEventArgs e)
         {
-            Tb_KeyInput.Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(255, 255, 255, 255));
+            Tb_KeyInput.Background = Default_TextboxBackground;
             ResetTooltip();
         }
 
@@ -170,13 +155,13 @@ namespace SuperIoTestProgram
         /// <returns></returns>
         private bool TryAddKey(byte keyCode)
         {
-            if (keys.Contains(keyCode))
+            if (_keys.Contains(keyCode))
             {
                 return false;
             }
 
-            keys.Add(keyCode);
-            keyListItems.Add(new KeyListItem()
+            _keys.Add(keyCode);
+            _keyListItems.Add(new KeyListItem()
             {
                 KeyCode = keyCode,
                 Enabled = true,
@@ -192,19 +177,19 @@ namespace SuperIoTestProgram
         /// <param name="e"></param>
         private void Btn_AddKey_Click(object sender, RoutedEventArgs e)
         {
-            if (lastAcceptKey == 0)
+            if (_lastAcceptKey == 0)
             {
                 // 还未输入任何键
                 return;
             }
 
-            bool addSuccess = TryAddKey(lastAcceptKey);
+            bool addSuccess = TryAddKey(_lastAcceptKey);
             if (!addSuccess)
             {
                 MessageBox.Show("该按键已存在", "提示", MessageBoxButton.OK, MessageBoxImage.Asterisk);
             }
             Tb_KeyInput.Text = "点此输入按键";
-            lastAcceptKey = 0;
+            _lastAcceptKey = 0;
         }
 
         /// <summary>
@@ -214,12 +199,12 @@ namespace SuperIoTestProgram
         /// <param name="e"></param>
         private void Btn_DeleteKeys_Click(object sender, RoutedEventArgs e)
         {
-            for (int i = keyListItems.Count - 1; i >= 0; i--)
+            for (int i = _keyListItems.Count - 1; i >= 0; i--)
             {
-                if (keyListItems[i].Enabled)
+                if (_keyListItems[i].Enabled)
                 {
-                    keys.Remove(keyListItems[i].KeyCode);
-                    keyListItems.RemoveAt(i);
+                    _keys.Remove(_keyListItems[i].KeyCode);
+                    _keyListItems.RemoveAt(i);
                 }
             }
         }
@@ -229,7 +214,7 @@ namespace SuperIoTestProgram
         private DispatcherTimer timer = new DispatcherTimer();
 
         private void Timer_Tick(object sender, EventArgs e) {
-            SuperKeyboard.Instance.KeyPress(SuperIo.SuperIo.Key.VK_F9);
+            SuperKeyboard.Instance.KeyPress(Key.VK_F9);
         }
         #endregion
 
@@ -237,13 +222,15 @@ namespace SuperIoTestProgram
         {
             if (!_status)
             {
+                if (Tools.Instance.GetTime() < _toggleTime)
+                {
+                    return;
+                }
+
+                _toggleTime = Tools.Instance.GetTime() + 100;
+
                 _status = true;
                 timer.Start();
-
-                //LbStatus.Content = "已开启";
-                this.Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(255, 255, 255, 127));
-                //BtnSetHotkey.IsEnabled = false;
-                //CbTopmost.IsEnabled = false;
 
                 Sound.Instance.PlayStart();
             }
@@ -253,122 +240,314 @@ namespace SuperIoTestProgram
         {
             if (_status)
             {
+                if (Tools.Instance.GetTime() < _toggleTime)
+                {
+                    return;
+                }
+
+                _toggleTime = Tools.Instance.GetTime() + 100;
+
                 _status = false;
-
                 timer.Stop();
-
-                //LbStatus.Content = "未开启";
-                this.Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(255, 255, 255, 255));
-                //BtnSetHotkey.IsEnabled = true;
-                //CbTopmost.IsEnabled = true;
 
                 Sound.Instance.PlayStop();
             }
         }
 
-        private void BtnSetHotkey_Click(object sender, RoutedEventArgs e)
+        #region 快捷键设置
+
+        
+        private int _setKeyGHandlerId = -1;
+        private int _setMouseGHandlerId = -1;
+        private bool _isNewHotkeyCtrl = false;
+        private bool _isNewHotkeyAlt = false;
+        private bool _isNewHotkeyShift = false;
+        private byte _newHotkey = 0;
+        private bool _isNewHotkeyMouse = false;
+
+        private bool _startKeyIsMouse = false;
+        private int _startKeyId = -1;
+        private bool _stopKeyIsMouse = false;
+        private int _stopKeyId = -1;
+        private bool _pauseKeyIsMouse = false;
+        private int _pauseKeyId = -1;
+
+        enum SettingButton
         {
-            SuperEvent.Instance.UnregisterKey(_lastHotkey);
+            None,
+            Start,
+            Stop,
+            Pause
+        }
+        private SettingButton _curSettingButton = SettingButton.None;
 
-            //Overlay.Visibility = Visibility.Visible;
-            //LbKeyWait.Content = "等待按键";
+        private void RegisterCurButton()
+        {
+            ResetCurButton();
 
-            _setKeyCtrl = false;
-            _setKeyAlt = false;
-            _setKeyShift = false;
+            string s = "";
+            if (_isNewHotkeyCtrl)
+            {
+                s += "C+";
+            }
+            if (_isNewHotkeyAlt)
+            {
+                s += "A+";
+            }
+            if (_isNewHotkeyShift)
+            {
+                s += "S+";
+            }
+
+            switch (_curSettingButton)
+            {
+                case SettingButton.Start:
+                    if (_isNewHotkeyMouse)
+                    {
+                        _startKeyId = SuperEvent.Instance.RegisterMouse(
+                            mouseEvent: _newHotkey,
+                            handler: ToolOn,
+                            ctrl: _isNewHotkeyCtrl,
+                            alt: _isNewHotkeyAlt,
+                            shift: _isNewHotkeyShift
+                        );
+                        Btn_SetStartKey.Content = s + Mouse.GetMouseName(_newHotkey);
+                    }
+                    else
+                    {
+                        _startKeyId = SuperEvent.Instance.RegisterKey(
+                            key: _newHotkey,
+                            keyDownHandler: ToolOn,
+                            keyUpHandler: delegate () { },
+                            ctrl: _isNewHotkeyCtrl,
+                            alt: _isNewHotkeyAlt,
+                            shift: _isNewHotkeyShift
+                        );
+                        Btn_SetStartKey.Content = s + Key.GetKeyName(_newHotkey);
+                    }
+                    break;
+                case SettingButton.Stop:
+                    if (_isNewHotkeyMouse)
+                    {
+                        _stopKeyId = SuperEvent.Instance.RegisterMouse(
+                            mouseEvent: _newHotkey,
+                            handler: ToolOff,
+                            ctrl: _isNewHotkeyCtrl,
+                            alt: _isNewHotkeyAlt,
+                            shift: _isNewHotkeyShift
+                        );
+                        Btn_SetStopKey.Content = s + Mouse.GetMouseName(_newHotkey);
+                    }
+                    else
+                    {
+                        _stopKeyId = SuperEvent.Instance.RegisterKey(
+                            key: _newHotkey,
+                            keyDownHandler: ToolOff,
+                            keyUpHandler: delegate () { },
+                            ctrl: _isNewHotkeyCtrl,
+                            alt: _isNewHotkeyAlt,
+                            shift: _isNewHotkeyShift
+                        );
+                        Btn_SetStopKey.Content = s + Key.GetKeyName(_newHotkey);
+                    }
+                    break;
+                case SettingButton.Pause:
+                    if (_isNewHotkeyMouse)
+                    {
+                        Btn_SetPauseKey.Content = s + Mouse.GetMouseName(_newHotkey);
+                    }
+                    else
+                    {
+                        Btn_SetPauseKey.Content = s + Key.GetKeyName(_newHotkey);
+                    }
+                    break;
+            }
+        }
+
+        private void ResetCurButton()
+        {
+            switch (_curSettingButton)
+            {
+                case SettingButton.Start:
+                    Btn_SetStartKey.Content = "";
+                    Btn_SetStartKey.IsEnabled = true;
+                    Btn_SetStartKey.BorderBrush = Default_BtnBorder;
+                    Btn_SetStartKey.Background = Default_BtnBackground;
+                    break;
+                case SettingButton.Stop:
+                    Btn_SetStopKey.Content = "";
+                    Btn_SetStopKey.IsEnabled = true;
+                    Btn_SetStopKey.BorderBrush = Default_BtnBorder;
+                    Btn_SetStopKey.Background = Default_BtnBackground;
+                    break;
+                case SettingButton.Pause:
+                    Btn_SetPauseKey.Content = "";
+                    Btn_SetPauseKey.IsEnabled = true;
+                    Btn_SetPauseKey.BorderBrush = Default_BtnBorder;
+                    Btn_SetPauseKey.Background = Default_BtnBackground;
+                    break;
+            }
+        }
+
+        private void WaitMultiKeys()
+        {
+            _isNewHotkeyCtrl = false;
+            _isNewHotkeyAlt = false;
+            _isNewHotkeyShift = false;
+            _isNewHotkeyMouse = false;
 
             _setKeyGHandlerId = SuperEvent.Instance.AddGlobalKeyHandler(
                 delegate (byte key, bool isKeyDown, bool isKeyUp)
                 {
                     if (isKeyDown)
                     {
-                        if (key == SuperIo.SuperIo.Key.VK_CONTROL || key == SuperIo.SuperIo.Key.VK_LCONTROL || key == SuperIo.SuperIo.Key.VK_RCONTROL)
+                        if (key == Key.VK_CONTROL || key == Key.VK_LCONTROL || key == Key.VK_RCONTROL)
                         {
-                            _setKeyCtrl = true;
+                            _isNewHotkeyCtrl = true;
                         }
-                        else if (key == SuperIo.SuperIo.Key.VK_MENU || key == SuperIo.SuperIo.Key.VK_LMENU || key == SuperIo.SuperIo.Key.VK_RMENU)
+                        else if (key == Key.VK_MENU || key == Key.VK_LMENU || key == Key.VK_RMENU)
                         {
-                            _setKeyAlt = true;
+                            _isNewHotkeyAlt = true;
                         }
-                        else if (key == SuperIo.SuperIo.Key.VK_SHIFT || key == SuperIo.SuperIo.Key.VK_LSHIFT || key == SuperIo.SuperIo.Key.VK_RSHIFT)
+                        else if (key == Key.VK_SHIFT || key == Key.VK_LSHIFT || key == Key.VK_RSHIFT)
                         {
-                            _setKeyShift = true;
+                            _isNewHotkeyShift = true;
                         }
                         else
                         {
-                            _lastHotkey = key;
-                            SuperEvent.Instance.RegisterKey(
-                                ctrl: _setKeyCtrl,
-                                alt: _setKeyAlt,
-                                shift: _setKeyShift,
-                                key: key,
-                                keyDownHandler: ToolOn,
-                                keyUpHandler: delegate () { }
-                            );
-                            string s = "";
-                            if (_setKeyCtrl)
+                            if (key == Key.VK_ESCAPE)
                             {
-                                s += "C+";
+                                ResetCurButton();
                             }
-                            if (_setKeyAlt)
+                            else
                             {
-                                s += "A+";
+                                _newHotkey = key;
+                                _isNewHotkeyMouse = false;
+
+                                RegisterCurButton();
                             }
-                            if (_setKeyShift)
-                            {
-                                s += "S+";
-                            }
-                            //LbHotkey.Content = "开关快捷键: " + s + key;
-                            //Overlay.Visibility = Visibility.Collapsed;
-                            SuperEvent.Instance.RemoveAllGlobalKeyHandlers();
+
+                            SuperEvent.Instance.RemoveGlobalKeyHandler(_setKeyGHandlerId);
+                            SuperEvent.Instance.RemoveGlobalMouseHandler(_setMouseGHandlerId);
+                            return false;
                         }
                     }
-                    else
+                    else if (isKeyUp)
                     {
-                        if (key == SuperIo.SuperIo.Key.VK_CONTROL || key == SuperIo.SuperIo.Key.VK_LCONTROL || key == SuperIo.SuperIo.Key.VK_RCONTROL)
+                        bool flag = false;
+                        if (key == Key.VK_CONTROL || key == Key.VK_LCONTROL || key == Key.VK_RCONTROL)
                         {
-                            _setKeyCtrl = false;
+                            flag = true;
+                            _isNewHotkeyCtrl = false;
                         }
-                        else if (key == SuperIo.SuperIo.Key.VK_MENU || key == SuperIo.SuperIo.Key.VK_LMENU || key == SuperIo.SuperIo.Key.VK_RMENU)
+                        else if (key == Key.VK_MENU || key == Key.VK_LMENU || key == Key.VK_RMENU)
                         {
-                            _setKeyAlt = false;
+                            flag = true;
+                            _isNewHotkeyAlt = false;
                         }
-                        else if (key == SuperIo.SuperIo.Key.VK_SHIFT || key == SuperIo.SuperIo.Key.VK_LSHIFT || key == SuperIo.SuperIo.Key.VK_RSHIFT)
+                        else if (key == Key.VK_SHIFT || key == Key.VK_LSHIFT || key == Key.VK_RSHIFT)
                         {
-                            _setKeyShift = false;
+                            flag = true;
+                            _isNewHotkeyShift = false;
+                        }
+
+                        if (flag)
+                        {
+                            if (!_isNewHotkeyCtrl && !_isNewHotkeyAlt && !_isNewHotkeyShift)
+                            {
+                                // 单击某修饰键并松开 则判定为使用该key作为快捷键
+                                _newHotkey = key;
+                                _isNewHotkeyMouse = false;
+
+                                RegisterCurButton();
+                                SuperEvent.Instance.RemoveGlobalKeyHandler(_setKeyGHandlerId);
+                                SuperEvent.Instance.RemoveGlobalMouseHandler(_setMouseGHandlerId);
+                                return false;
+                            }
                         }
                     }
 
-                    if (_setKeyCtrl || _setKeyAlt || _setKeyShift)
+                    return false;
+                }
+            );
+            _setMouseGHandlerId = SuperEvent.Instance.AddGlobalMouseHandler(
+                delegate (byte mEvent)
+                {
+                    if (mEvent == Mouse.MBUTTONDOWN || mEvent == Mouse.MOUSEWHEEL || mEvent == Mouse.XBUTTON1DOWN || mEvent == Mouse.XBUTTON2DOWN)
                     {
-                        string s = "";
-                        if (_setKeyCtrl)
-                        {
-                            s += "Ctrl + ";
-                        }
-                        if (_setKeyAlt)
-                        {
-                            s += "Alt + ";
-                        }
-                        if (_setKeyShift)
-                        {
-                            s += "Shift + ";
-                        }
-                        //LbKeyWait.Content = s;
+                        _newHotkey = mEvent;
+                        _isNewHotkeyMouse = true;
+
+                        RegisterCurButton();
+                        SuperEvent.Instance.RemoveGlobalKeyHandler(_setKeyGHandlerId);
+                        SuperEvent.Instance.RemoveGlobalMouseHandler(_setMouseGHandlerId);
                     }
-                    else
-                    {
-                        //LbKeyWait.Content = "等待按键";
-                    }
+
                     return false;
                 }
             );
         }
 
-        private void BtnSetWuxueKey_Click(object sender, RoutedEventArgs e)
+        private void Btn_SetStartKey_Click(object sender, RoutedEventArgs e)
         {
-            throw new NotImplementedException();
+            if (_startKeyIsMouse)
+            {
+                SuperEvent.Instance.UnregisterMouse(_startKeyId);
+            }
+            else
+            {
+                SuperEvent.Instance.UnregisterKey(_startKeyId);
+            }
+
+            Btn_SetStartKey.Content = "等待输入";
+            Btn_SetStartKey.IsEnabled = false;
+            Btn_SetStartKey.BorderBrush = new SolidColorBrush(Color.FromArgb(255, 0, 255, 0));
+            Btn_SetStartKey.Background = new SolidColorBrush(Color.FromArgb(255, 247, 247, 247));
+
+            _curSettingButton = SettingButton.Start;
+            WaitMultiKeys();
         }
+
+        private void Btn_SetStopKey_Click(object sender, RoutedEventArgs e)
+        {
+            if (_stopKeyIsMouse)
+            {
+                SuperEvent.Instance.UnregisterMouse(_stopKeyId);
+            }
+            else
+            {
+                SuperEvent.Instance.UnregisterKey(_stopKeyId);
+            }
+
+            Btn_SetStopKey.Content = "等待输入";
+            Btn_SetStopKey.IsEnabled = false;
+            Btn_SetStopKey.BorderBrush = new SolidColorBrush(Color.FromArgb(255, 0, 255, 0));
+            Btn_SetStopKey.Background = new SolidColorBrush(Color.FromArgb(255, 247, 247, 247));
+
+            _curSettingButton = SettingButton.Stop;
+            WaitMultiKeys();
+        }
+
+        private void Btn_SetPauseKey_Click(object sender, RoutedEventArgs e)
+        {
+            if (_pauseKeyIsMouse)
+            {
+                SuperEvent.Instance.UnregisterMouse(_pauseKeyId);
+            }
+            else
+            {
+                SuperEvent.Instance.UnregisterKey(_pauseKeyId);
+            }
+
+            Btn_SetPauseKey.Content = "等待输入";
+            Btn_SetPauseKey.IsEnabled = false;
+            Btn_SetPauseKey.BorderBrush = new SolidColorBrush(Color.FromArgb(255, 0, 255, 0));
+            Btn_SetPauseKey.Background = new SolidColorBrush(Color.FromArgb(255, 247, 247, 247));
+
+            _curSettingButton = SettingButton.Pause;
+            WaitMultiKeys();
+        }
+        #endregion
 
         private void Btn_MarcoWebsite_Click(object sender, RoutedEventArgs e)
         {

@@ -82,19 +82,19 @@
                 </Grid.ColumnDefinitions>
 
                 <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">启 动 键</Label>
-                <Button Grid.Row="0" Grid.Column="1" Margin="0,3">XBUTTON1</Button>
+                <Button x:Name="Btn_SetStartKey" Click="Btn_SetStartKey_Click" Grid.Row="0" Grid.Column="1" Margin="0,3" FontSize="11">XBUTTON1</Button>
                 <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">停 止 键</Label>
-                <Button Grid.Row="1" Grid.Column="1" Margin="0,3">XBUTTON2</Button>
+                <Button x:Name="Btn_SetStopKey" Click="Btn_SetStopKey_Click" Grid.Row="1" Grid.Column="1" Margin="0,3" FontSize="11">XBUTTON2</Button>
                 <Label Grid.Row="2" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">暂 停 键</Label>
-                <Button Grid.Row="2" Grid.Column="1" Margin="0,3">LALT</Button>
+                <Button x:Name="Btn_SetPauseKey" Click="Btn_SetPauseKey_Click" Grid.Row="2" Grid.Column="1" Margin="0,3" FontSize="11">LALT</Button>
                 <Label Grid.Row="3" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">按键模式</Label>
-                <ComboBox Grid.Row="3" Grid.Column="1" Margin="0,3" SelectedIndex="0">
+                <ComboBox x:Name="Cb_KeyMode" Grid.Row="3" Grid.Column="1" Margin="0,3" SelectedIndex="0">
                     <ComboBoxItem IsSelected="True">顺序模式</ComboBoxItem>
                     <ComboBoxItem>按压模式</ComboBoxItem>
                     <ComboBoxItem>武学助手模式</ComboBoxItem>
                 </ComboBox>
                 <Label Grid.Row="4" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">按键间隔</Label>
-                <TextBox Grid.Row="4" Grid.Column="1" Margin="0,3" VerticalAlignment="Center" Padding="5,4" TextAlignment="Center">50</TextBox>
+                <TextBox x:Name="Tb_KeyInterval" Grid.Row="4" Grid.Column="1" Margin="0,3" VerticalAlignment="Center" Padding="5,4" TextAlignment="Center">50</TextBox>
                 <Label Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" FontSize="10">单击右侧按钮来设置快捷键 按Esc清除</Label>
             </Grid>
             <CheckBox Grid.Row="2" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">声音提示</CheckBox>
