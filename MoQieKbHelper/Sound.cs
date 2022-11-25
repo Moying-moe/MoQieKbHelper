@@ -6,7 +6,7 @@
 using System;
 using System.Windows.Media;
 
-namespace SuperIoTestProgram
+namespace MoQieKbHelper
 {
     internal class Sound
     {

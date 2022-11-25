@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{FF66ED24-2B35-4071-A915-8955DB27FCF4}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>SuperIoTestProgram</RootNamespace>
-    <AssemblyName>SuperIoTestProgram</AssemblyName>
+    <RootNamespace>MoQieKbHelper</RootNamespace>
+    <AssemblyName>墨切按键</AssemblyName>
     <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>

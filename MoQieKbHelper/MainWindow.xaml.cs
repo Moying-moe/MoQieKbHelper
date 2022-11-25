@@ -11,7 +11,7 @@ using System.Collections.ObjectModel;
 using Mouse = SuperIo.SuperIo.Mouse;
 using System.Text.RegularExpressions;
 
-namespace SuperIoTestProgram
+namespace MoQieKbHelper
 {
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
