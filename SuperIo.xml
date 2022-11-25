@@ -25,6 +25,13 @@
             <para>Some may not work depend on your physical device type.</para>
             </summary>
         </member>
+        <member name="M:SuperIo.SuperIo.Key.GetKeyName(System.Byte)">
+            <summary>
+            Get the key's name
+            </summary>
+            <param name="keyCode"></param>
+            <returns></returns>
+        </member>
         <member name="F:SuperIo.SuperIo.Key.VK_LBUTTON">
             <summary>
             鼠标左键
@@ -889,6 +896,13 @@
             <summary>
             <para>Mouse code</para>
             </summary>
+        </member>
+        <member name="M:SuperIo.SuperIo.Mouse.GetMouseName(System.Byte)">
+            <summary>
+            Get the mouse button name
+            </summary>
+            <param name="mouseCode"></param>
+            <returns></returns>
         </member>
         <member name="F:SuperIo.SuperIo.Mouse.MOUSEMOVE">
             <summary>

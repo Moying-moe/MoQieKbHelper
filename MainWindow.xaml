@@ -22,8 +22,9 @@
         <!--<Label Grid.Row="0" Grid.Column="0" VerticalAlignment="Bottom" Padding="0,0,0,-2">
             <TextBlock x:Name="LabelLog" TextWrapping="Wrap" Text="" FontSize="12" VerticalAlignment="Bottom"/>
         </Label>-->
-        <TextBox Grid.Row="0" Grid.Column="0" Margin="15,5" IsReadOnly="True" IsUndoEnabled="False" FontSize="15"
-                 HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontFamily="Microsoft YaHei">点此输入按键</TextBox>
+        <TextBox x:Name="Tb_KeyInput" GotFocus="Tb_KeyInput_GotFocus" LostFocus="Tb_KeyInput_LostFocus" KeyDown="Tb_KeyInput_KeyDown"
+                 Grid.Row="0" Grid.Column="0" Margin="15,5" IsReadOnly="True" IsUndoEnabled="False" FontSize="15"
+                 HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontFamily="Microsoft YaHei" Text="点此输入按键"></TextBox>
         
         <Grid Grid.Row="0" Grid.Column="1" Margin="15,5">
             <Grid.ColumnDefinitions>
@@ -31,8 +32,8 @@
                 <ColumnDefinition Width="1*" />
             </Grid.ColumnDefinitions>
 
-            <Button Grid.Row="0" Grid.Column="0" Margin="0,0,5,0">添加按键</Button>
-            <Button Grid.Row="0" Grid.Column="1" Margin="5,0,0,0">删除勾选</Button>
+            <Button x:Name="Btn_AddKey" Click="Btn_AddKey_Click" Grid.Row="0" Grid.Column="0" Margin="0,0,5,0">添加按键</Button>
+            <Button x:Name="Btn_DeleteKeys" Click="Btn_DeleteKeys_Click" Grid.Row="0" Grid.Column="1" Margin="5,0,0,0">删除勾选</Button>
         </Grid>
 
         <ListBox x:Name="Lb_KeyList" Grid.Row="1" Grid.Column="0" Margin="15,5">
@@ -105,6 +106,10 @@
         </Label>
         <Label MouseDown="Lb_GithubLink_MouseDown" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" FontSize="11" Foreground="Blue" HorizontalAlignment="left" VerticalAlignment="Bottom" Padding="5,0,0,2">
             <TextBlock TextWrapping="Wrap" Text="Github" TextAlignment="left" TextDecorations="Underline" Cursor="Hand" />
+        </Label>
+        <Label Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" FontSize="12"
+               HorizontalAlignment="left" VerticalAlignment="Bottom" Padding="50,0,0,2" Width="340">
+            <TextBlock x:Name="Lb_Tooltip" TextWrapping="Wrap" TextAlignment="Left" />
         </Label>
     </Grid>
 </Window>

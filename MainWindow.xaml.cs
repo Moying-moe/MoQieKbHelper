@@ -14,13 +14,16 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Forms;
-using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using MessageBox = System.Windows.MessageBox;
+using static SuperIo.SuperIo;
+using System.Windows.Input;
+using Key = SuperIo.SuperIo.Key;
+using System.Collections.ObjectModel;
 
 namespace SuperIoTestProgram
 {
@@ -31,6 +34,7 @@ namespace SuperIoTestProgram
     {
         private class KeyListItem
         {
+            public byte KeyCode { get; set; }
             public string KeyString { get; set; }
             public bool Enabled { get; set; }
         }
@@ -38,41 +42,29 @@ namespace SuperIoTestProgram
 
         private bool _status = false;
 
-        private byte _lastHotkey = SuperIo.SuperIo.Key.VK_ADD;
+        private byte _lastHotkey = Key.VK_ADD;
         private int _setKeyGHandlerId = -1;
         private bool _setKeyCtrl = false;
         private bool _setKeyAlt = false;
         private bool _setKeyShift = false;
 
-        private DispatcherTimer timer = new DispatcherTimer();
-
         private List<byte> keys = new List<byte>();                         // 用户添加的需要按下的键
-        private List<KeyListItem> keyListItems = new List<KeyListItem>();   // 用户添加的需要按下的按键列表（显示在UI上）
+        private ObservableCollection<KeyListItem> keyListItems = new ObservableCollection<KeyListItem>();   // 用户添加的需要按下的按键列表（显示在UI上）
 
         public MainWindow()
         {
             InitializeComponent();
 
-            #region 绑定KeyList
-            keyListItems.Add(new KeyListItem()
-            {
-                KeyString = "F9",
-                Enabled = true
-            });
-            keyListItems.Add(new KeyListItem()
-            {
-                KeyString = "F10",
-                Enabled = false
-            });
-
             Lb_KeyList.ItemsSource = keyListItems;
-            #endregion
+            TryAddKey(Key.VK_F9);
+            TryAddKey(Key.VK_F10);
+
+            ResetTooltip();
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // 初始化
-
             #region 模块初始化
             bool soundInitFlag = Sound.Instance.ForceInitialize();
 
@@ -107,9 +99,139 @@ namespace SuperIoTestProgram
             #endregion
         }
 
+        #region Tooltip
+        /// <summary>
+        /// 设置提示文本
+        /// </summary>
+        /// <param name="content"></param>
+        private void SetTooltip(string content)
+        {
+            Lb_Tooltip.Text = content;
+        }
+
+        /// <summary>
+        /// 将提示文本还原为默认状态
+        /// </summary>
+        private void ResetTooltip()
+        {
+            SetTooltip("遇到问题可以在Github上反馈给我");
+        }
+        #endregion
+
+        #region 添加按键
+        private byte lastAcceptKey = 0;
+
+        /// <summary>
+        /// 在文本框中按下按键时，变更显示的内容
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Tb_KeyInput_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (SuperEvent.Instance.LastPressKey == Key.VK_ESCAPE)
+            {
+                // 退出输入
+                Btn_AddKey.Focus();
+            }
+            else
+            {
+                lastAcceptKey = SuperEvent.Instance.LastPressKey;
+                Tb_KeyInput.Text = Key.GetKeyName(lastAcceptKey);
+            }
+            e.Handled = true;
+        }
+
+        /// <summary>
+        /// 提示用户开始输入按键
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Tb_KeyInput_GotFocus(object sender, RoutedEventArgs e)
+        {
+            Tb_KeyInput.Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(255, 255, 255, 127));
+            SetTooltip("如果无法输入按键，请尝试切换输入法后重试。部分特殊按键可能无法识别。");
+        }
+
+        /// <summary>
+        /// 还原
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Tb_KeyInput_LostFocus(object sender, RoutedEventArgs e)
+        {
+            Tb_KeyInput.Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(255, 255, 255, 255));
+            ResetTooltip();
+        }
+
+        /// <summary>
+        /// 尝试添加按键
+        /// </summary>
+        /// <param name="keyCode"></param>
+        /// <returns></returns>
+        private bool TryAddKey(byte keyCode)
+        {
+            if (keys.Contains(keyCode))
+            {
+                return false;
+            }
+
+            keys.Add(keyCode);
+            keyListItems.Add(new KeyListItem()
+            {
+                KeyCode = keyCode,
+                Enabled = true,
+                KeyString = Key.GetKeyName(keyCode)
+            });
+            return true;
+        }
+
+        /// <summary>
+        /// 添加按键
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Btn_AddKey_Click(object sender, RoutedEventArgs e)
+        {
+            if (lastAcceptKey == 0)
+            {
+                // 还未输入任何键
+                return;
+            }
+
+            bool addSuccess = TryAddKey(lastAcceptKey);
+            if (!addSuccess)
+            {
+                MessageBox.Show("该按键已存在", "提示", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+            }
+            Tb_KeyInput.Text = "点此输入按键";
+            lastAcceptKey = 0;
+        }
+
+        /// <summary>
+        /// 删除勾选选中的按键
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Btn_DeleteKeys_Click(object sender, RoutedEventArgs e)
+        {
+            for (int i = keyListItems.Count - 1; i >= 0; i--)
+            {
+                if (keyListItems[i].Enabled)
+                {
+                    keys.Remove(keyListItems[i].KeyCode);
+                    keyListItems.RemoveAt(i);
+                }
+            }
+        }
+        #endregion
+
+        #region Timer
+        private DispatcherTimer timer = new DispatcherTimer();
+
         private void Timer_Tick(object sender, EventArgs e) {
             SuperKeyboard.Instance.KeyPress(SuperIo.SuperIo.Key.VK_F9);
         }
+        #endregion
 
         private void ToolOn()
         {
