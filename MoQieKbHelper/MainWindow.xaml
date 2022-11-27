@@ -44,7 +44,7 @@
                             <ColumnDefinition Width="20" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <CheckBox IsChecked="{Binding Enabled}" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                        <CheckBox IsChecked="{Binding Enabled}" Checked="KeyListUpdate" Unchecked="KeyListUpdate" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
                             <CheckBox.LayoutTransform>
                                 <ScaleTransform ScaleX="1" ScaleY="1.1" />
                             </CheckBox.LayoutTransform>
@@ -99,8 +99,8 @@
                          PreviewTextInput="Tb_KeyInterval_PreviewTextInput" TextChanged="Tb_KeyInterval_TextChanged" FontSize="12">50</TextBox>
                 <Label Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center">单击右侧按钮来设置快捷键 按Esc清除</Label>
             </Grid>
-            <CheckBox x:Name="Cb_Sound" Grid.Row="2" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center" IsChecked="True">声音提示</CheckBox>
-            <Button Grid.Row="2" Grid.Column="1" IsEnabled="False" FontSize="12">其他设置</Button>
+            <CheckBox Checked="Cb_Sound_Updated" Unchecked="Cb_Sound_Updated" x:Name="Cb_Sound" Grid.Row="2" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center" IsChecked="True">声音提示</CheckBox>
+            <Button Click="Btn_OtherSetting_Click" Grid.Row="2" Grid.Column="1" FontSize="12">其他设置</Button>
         </Grid>
 
         <Label Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" FontSize="8" Foreground="#FF484848" HorizontalAlignment="Right" VerticalAlignment="Bottom" Padding="0,0,3,2">

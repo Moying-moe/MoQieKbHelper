@@ -24,7 +24,7 @@ namespace MoQieKbHelper
         private readonly SolidColorBrush Default_BtnBackground = new SolidColorBrush(Color.FromArgb(255, 221, 221, 221));
         private readonly SolidColorBrush Default_TextboxBackground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
 
-        private class KeyListItem
+        public class KeyListItem
         {
             public byte KeyCode { get; set; }
             public string KeyString { get; set; }
@@ -41,33 +41,14 @@ namespace MoQieKbHelper
 
         public MainWindow()
         {
+            // 锁定Update 防止加载组建时导致ToolSetting被更新
+            ToolSettingHandler.Instance.LockUpdate();
             InitializeComponent();
+            ToolSettingHandler.Instance.UnlockUpdate();
 
+            // 设置标题
             this.Title = "墨切按键 - " + VERSION;
 
-            Lb_KeyList.ItemsSource = _keyListItems;
-            TryAddKey(Key.VK_F9);
-            TryAddKey(Key.VK_F10, false);
-            TryAddKey(Key.VK_Q, false);
-            TryAddKey(Key.VK_F1, false);
-
-            ResetTooltip();
-
-            _lockElement.Add(Tb_KeyInput);
-            _lockElement.Add(Btn_AddKey);
-            _lockElement.Add(Btn_DeleteKeys);
-            _lockElement.Add(Btn_MarcoWebsite);
-            _lockElement.Add(Btn_SetStartKey);
-            _lockElement.Add(Btn_SetStopKey);
-            _lockElement.Add(Btn_SetPauseKey);
-            //_lockElement.Add(Cb_KeyMode);
-            _lockElement.Add(Tb_KeyInterval);
-            _lockElement.Add(Cb_Sound);
-            _lockElement.Add(Lb_KeyList);
-        }
-
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
             #region 模块初始化
             bool soundInitFlag = Sound.Instance.ForceInitialize();
 
@@ -88,29 +69,86 @@ namespace MoQieKbHelper
             }
             #endregion
 
-            _timer.Interval = TimeSpan.FromMilliseconds(50);
+            #region 读取并应用配置
+            ToolSettingHandler.Instance.LoadSetting();
+
+            // 按键列表
+            Lb_KeyList.ItemsSource = _keyListItems;
+            foreach (KeyItem item in ToolSettingHandler.Instance.Setting.KeyList)
+            {
+                TryAddKey(item.Key, item.Enabled);
+            }
+            // 绑定_keyListItems的变化事件，让keylist产生变化的时候，都会通知ToolSettingHandler更新配置文件
+            _keyListItems.CollectionChanged += KeyListUpdate;
+
+            // 按键间隔
+            Tb_KeyInterval.Text = ToolSettingHandler.Instance.Setting.KeyInterval.ToString();
+            _timer.Interval = TimeSpan.FromMilliseconds(ToolSettingHandler.Instance.Setting.KeyInterval);
             _timer.Tick += Timer_Tick;
 
-            #region 热键注册
-            _startKeyIsMouse = true;
-            _startKeyId = SuperEvent.Instance.RegisterMouse(
-                mouseEvent: Mouse.XBUTTON1DOWN,
-                handler: ToolOn
-            );
+            // 热键
+            _curSettingButton = SettingButton.Start;
+            _isNewHotkeyMouse = ToolSettingHandler.Instance.Setting.StartKey.IsMouse;
+            _isNewHotkeyCtrl = ToolSettingHandler.Instance.Setting.StartKey.Ctrl;
+            _isNewHotkeyAlt = ToolSettingHandler.Instance.Setting.StartKey.Alt;
+            _isNewHotkeyShift = ToolSettingHandler.Instance.Setting.StartKey.Shift;
+            _newHotkey = ToolSettingHandler.Instance.Setting.StartKey.KeyCode;
+            RegisterCurButton();
 
-            _stopKeyIsMouse = true;
-            _stopKeyId = SuperEvent.Instance.RegisterMouse(
-                mouseEvent: Mouse.XBUTTON2UP,
-                handler: ToolOff
-            );
+            _curSettingButton = SettingButton.Stop;
+            _isNewHotkeyMouse = ToolSettingHandler.Instance.Setting.StopKey.IsMouse;
+            _isNewHotkeyCtrl = ToolSettingHandler.Instance.Setting.StopKey.Ctrl;
+            _isNewHotkeyAlt = ToolSettingHandler.Instance.Setting.StopKey.Alt;
+            _isNewHotkeyShift = ToolSettingHandler.Instance.Setting.StopKey.Shift;
+            _newHotkey = ToolSettingHandler.Instance.Setting.StopKey.KeyCode;
+            RegisterCurButton();
 
-            _pauseKeyIsMouse = false;
-            _pauseKeyId = SuperEvent.Instance.RegisterKey(
-                key: Key.VK_LMENU,
-                keyDownHandler: ToolPauseOn,
-                keyUpHandler: ToolPauseOff
-            );
+            _curSettingButton = SettingButton.Pause;
+            _isNewHotkeyMouse = ToolSettingHandler.Instance.Setting.PauseKey.IsMouse;
+            _isNewHotkeyCtrl = ToolSettingHandler.Instance.Setting.PauseKey.Ctrl;
+            _isNewHotkeyAlt = ToolSettingHandler.Instance.Setting.PauseKey.Alt;
+            _isNewHotkeyShift = ToolSettingHandler.Instance.Setting.PauseKey.Shift;
+            _newHotkey = ToolSettingHandler.Instance.Setting.PauseKey.KeyCode;
+            RegisterCurButton();
+
+            // 声音
+            Cb_Sound.IsChecked = ToolSettingHandler.Instance.Setting.Sound;
+
+            // 按键模式
+            int keyMode = ToolSettingHandler.Instance.Setting.KeyMode;
+            if (keyMode < 0 || keyMode > Cb_KeyMode.Items.Count)
+            {
+                keyMode = 0;
+            }
+            Cb_KeyMode.SelectedIndex = keyMode;
             #endregion
+
+            // 设置tooltip
+            ResetTooltip();
+
+            #region 运行时锁定控件
+            _lockElement.Add(Tb_KeyInput);
+            _lockElement.Add(Btn_AddKey);
+            _lockElement.Add(Btn_DeleteKeys);
+            _lockElement.Add(Btn_MarcoWebsite);
+            _lockElement.Add(Btn_SetStartKey);
+            _lockElement.Add(Btn_SetStopKey);
+            _lockElement.Add(Btn_SetPauseKey);
+            //_lockElement.Add(Cb_KeyMode);
+            _lockElement.Add(Tb_KeyInterval);
+            _lockElement.Add(Cb_Sound);
+            _lockElement.Add(Lb_KeyList);
+            #endregion
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            
+        }
+
+        private void KeyListUpdate(object s, object e)
+        {
+            ToolSettingHandler.Instance.UpdateKeyList(_keyListItems);
         }
 
         #region 提示文本
@@ -330,8 +368,6 @@ namespace MoQieKbHelper
         #endregion
 
         #region 快捷键设置
-
-
         private int _setKeyGHandlerId = -1;
         private int _setMouseGHandlerId = -1;
         private bool _isNewHotkeyCtrl = false;
@@ -348,7 +384,7 @@ namespace MoQieKbHelper
         private int _pauseKeyId = -1;
         private int _pauseKeyId_A = -1; // 鼠标事件中额外的事件
 
-        enum SettingButton
+        public enum SettingButton
         {
             None,
             Start,
@@ -374,6 +410,9 @@ namespace MoQieKbHelper
             {
                 s += "S+";
             }
+
+            // 更新配置文件
+            ToolSettingHandler.Instance.UpdateHotkey(_curSettingButton, _newHotkey, _isNewHotkeyMouse, _isNewHotkeyCtrl, _isNewHotkeyAlt, _isNewHotkeyShift);
 
             switch (_curSettingButton)
             {
@@ -612,6 +651,8 @@ namespace MoQieKbHelper
             Btn_SetStartKey.Background = new SolidColorBrush(Color.FromArgb(255, 247, 247, 247));
 
             _curSettingButton = SettingButton.Start;
+            // 更新配置文件
+            ToolSettingHandler.Instance.UpdateHotkey(_curSettingButton, 0, false, false, false, false);
             WaitMultiKeys();
         }
 
@@ -626,12 +667,15 @@ namespace MoQieKbHelper
                 SuperEvent.Instance.UnregisterKey(_stopKeyId);
             }
 
+
             Btn_SetStopKey.Content = "等待输入";
             Btn_SetStopKey.IsEnabled = false;
             Btn_SetStopKey.BorderBrush = new SolidColorBrush(Color.FromArgb(255, 0, 255, 0));
             Btn_SetStopKey.Background = new SolidColorBrush(Color.FromArgb(255, 247, 247, 247));
 
             _curSettingButton = SettingButton.Stop;
+            // 更新配置文件
+            ToolSettingHandler.Instance.UpdateHotkey(_curSettingButton, 0, false, false, false, false);
             WaitMultiKeys();
         }
 
@@ -647,12 +691,15 @@ namespace MoQieKbHelper
                 SuperEvent.Instance.UnregisterKey(_pauseKeyId);
             }
 
+
             Btn_SetPauseKey.Content = "等待输入";
             Btn_SetPauseKey.IsEnabled = false;
             Btn_SetPauseKey.BorderBrush = new SolidColorBrush(Color.FromArgb(255, 0, 255, 0));
             Btn_SetPauseKey.Background = new SolidColorBrush(Color.FromArgb(255, 247, 247, 247));
 
             _curSettingButton = SettingButton.Pause;
+            // 更新配置文件
+            ToolSettingHandler.Instance.UpdateHotkey(_curSettingButton, 0, false, false, false, false);
             WaitMultiKeys();
         }
         #endregion
@@ -670,6 +717,7 @@ namespace MoQieKbHelper
             }
         }
 
+        #region 按键间隔输入限制
         private void Tb_KeyInterval_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             e.Handled = new Regex("[^0-9]+").IsMatch(e.Text);
@@ -684,7 +732,22 @@ namespace MoQieKbHelper
             }
             Tb_KeyInterval.Text = interval.ToString();
 
+            // 更新配置文件
+            ToolSettingHandler.Instance.UpdateKeyInterval(interval);
+
             _timer.Interval = TimeSpan.FromMilliseconds(interval);
+        }
+        #endregion
+
+        private void Btn_OtherSetting_Click(object sender, RoutedEventArgs e)
+        {
+            //ToolSettingHandler.Instance.SaveSetting();
+        }
+
+        private void Cb_Sound_Updated(object sender, RoutedEventArgs e)
+        {
+            // 更新配置文件
+            ToolSettingHandler.Instance.UpdateSound(Cb_Sound.IsChecked.Value);
         }
     }
 }
