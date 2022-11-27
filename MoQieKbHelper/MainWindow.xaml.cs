@@ -59,7 +59,7 @@ namespace MoQieKbHelper
             _lockElement.Add(Btn_MarcoWebsite);
             _lockElement.Add(Btn_SetStartKey);
             _lockElement.Add(Btn_SetStopKey);
-            //_lockElement.Add(Btn_SetPauseKey);
+            _lockElement.Add(Btn_SetPauseKey);
             //_lockElement.Add(Cb_KeyMode);
             _lockElement.Add(Tb_KeyInterval);
             _lockElement.Add(Cb_Sound);
@@ -74,7 +74,7 @@ namespace MoQieKbHelper
             bool keyboardInitFlag = SuperKeyboard.Instance.IsInitialized;
             bool hotkeyInitFlag = SuperEvent.Instance.IsInitialized;
 
-            SuperKeyboard.Instance.SetKeyPressDelay(33);
+            SuperKeyboard.Instance.SetKeyPressDelay(0);
 
             if (!keyboardInitFlag)
             {
@@ -88,8 +88,8 @@ namespace MoQieKbHelper
             }
             #endregion
 
-            timer.Interval = TimeSpan.FromMilliseconds(50);
-            timer.Tick += Timer_Tick;
+            _timer.Interval = TimeSpan.FromMilliseconds(50);
+            _timer.Tick += Timer_Tick;
 
             #region 热键注册
             _startKeyIsMouse = true;
@@ -102,6 +102,13 @@ namespace MoQieKbHelper
             _stopKeyId = SuperEvent.Instance.RegisterMouse(
                 mouseEvent: Mouse.XBUTTON2UP,
                 handler: ToolOff
+            );
+
+            _pauseKeyIsMouse = false;
+            _pauseKeyId = SuperEvent.Instance.RegisterKey(
+                key: Key.VK_LMENU,
+                keyDownHandler: ToolPauseOn,
+                keyUpHandler: ToolPauseOff
             );
             #endregion
         }
@@ -238,9 +245,14 @@ namespace MoQieKbHelper
         #endregion
 
         #region Timer
-        private DispatcherTimer timer = new DispatcherTimer();
+        private DispatcherTimer _timer = new DispatcherTimer();
+        private bool _isTimerPaused = false;
 
         private void Timer_Tick(object sender, EventArgs e) {
+            if (_isTimerPaused)
+            {
+                return;
+            }
             foreach (KeyListItem item in _keyListItems)
             {
                 if (item.Enabled)
@@ -252,6 +264,7 @@ namespace MoQieKbHelper
         }
         #endregion
 
+        #region Tool控制
         private void ToolOn()
         {
             if (!_status)
@@ -264,7 +277,7 @@ namespace MoQieKbHelper
                 _toggleTime = Tools.Instance.GetTime() + 100;
 
                 _status = true;
-                timer.Start();
+                _timer.Start();
 
                 foreach (UIElement element in _lockElement)
                 {
@@ -290,7 +303,7 @@ namespace MoQieKbHelper
                 _toggleTime = Tools.Instance.GetTime() + 100;
 
                 _status = false;
-                timer.Stop();
+                _timer.Stop();
 
                 foreach (UIElement element in _lockElement)
                 {
@@ -304,9 +317,21 @@ namespace MoQieKbHelper
             }
         }
 
+        private void ToolPauseOn()
+        {
+            _isTimerPaused = true;
+        }
+
+        private void ToolPauseOff()
+        {
+            _isTimerPaused = false;
+        }
+
+        #endregion
+
         #region 快捷键设置
 
-        
+
         private int _setKeyGHandlerId = -1;
         private int _setMouseGHandlerId = -1;
         private bool _isNewHotkeyCtrl = false;
@@ -321,6 +346,7 @@ namespace MoQieKbHelper
         private int _stopKeyId = -1;
         private bool _pauseKeyIsMouse = false;
         private int _pauseKeyId = -1;
+        private int _pauseKeyId_A = -1; // 鼠标事件中额外的事件
 
         enum SettingButton
         {
@@ -404,10 +430,40 @@ namespace MoQieKbHelper
                 case SettingButton.Pause:
                     if (_isNewHotkeyMouse)
                     {
-                        Btn_SetPauseKey.Content = s + Mouse.GetMouseName(_newHotkey);
+                        if (_newHotkey == Mouse.MOUSEWHEELDOWN || _newHotkey == Mouse.MOUSEWHEELUP)
+                        {
+                            MessageBox.Show("暂停键不可设置为鼠标滚轮上滚/下滚", "警告", MessageBoxButton.OK, MessageBoxImage.Error);
+                            ResetCurButton();
+                        }
+                        else
+                        {
+                            _pauseKeyId = SuperEvent.Instance.RegisterMouse(
+                                mouseEvent: _newHotkey,
+                                handler: ToolPauseOn,
+                                ctrl: _isNewHotkeyCtrl,
+                                alt: _isNewHotkeyAlt,
+                                shift: _isNewHotkeyShift
+                            );
+                            _pauseKeyId_A = SuperEvent.Instance.RegisterMouse(
+                                mouseEvent: (byte)(_newHotkey + 1),   // 即DOWN对应的UP事件
+                                handler: ToolPauseOff,
+                                ctrl: _isNewHotkeyCtrl,
+                                alt: _isNewHotkeyAlt,
+                                shift: _isNewHotkeyShift
+                            );
+                            Btn_SetPauseKey.Content = s + Mouse.GetMouseName(_newHotkey);
+                        }
                     }
                     else
                     {
+                        _pauseKeyId = SuperEvent.Instance.RegisterKey(
+                            key: _newHotkey,
+                            keyDownHandler: ToolPauseOn,
+                            keyUpHandler: ToolPauseOff,
+                            ctrl: _isNewHotkeyCtrl,
+                            alt: _isNewHotkeyAlt,
+                            shift: _isNewHotkeyShift
+                        );
                         Btn_SetPauseKey.Content = s + Key.GetKeyName(_newHotkey);
                     }
                     break;
@@ -523,7 +579,8 @@ namespace MoQieKbHelper
             _setMouseGHandlerId = SuperEvent.Instance.AddGlobalMouseHandler(
                 delegate (byte mEvent)
                 {
-                    if (mEvent == Mouse.MBUTTONDOWN || mEvent == Mouse.MOUSEWHEEL || mEvent == Mouse.XBUTTON1DOWN || mEvent == Mouse.XBUTTON2DOWN)
+                    if (mEvent == Mouse.MBUTTONDOWN || mEvent == Mouse.MOUSEWHEELUP || mEvent == Mouse.MOUSEWHEELDOWN || 
+                        mEvent == Mouse.XBUTTON1DOWN || mEvent == Mouse.XBUTTON2DOWN)
                     {
                         _newHotkey = mEvent;
                         _isNewHotkeyMouse = true;
@@ -583,6 +640,7 @@ namespace MoQieKbHelper
             if (_pauseKeyIsMouse)
             {
                 SuperEvent.Instance.UnregisterMouse(_pauseKeyId);
+                SuperEvent.Instance.UnregisterMouse(_pauseKeyId_A);
             }
             else
             {
@@ -626,7 +684,7 @@ namespace MoQieKbHelper
             }
             Tb_KeyInterval.Text = interval.ToString();
 
-            timer.Interval = TimeSpan.FromMilliseconds(interval);
+            _timer.Interval = TimeSpan.FromMilliseconds(interval);
         }
     }
 }

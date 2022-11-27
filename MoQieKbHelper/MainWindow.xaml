@@ -86,7 +86,7 @@
                 <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">停 止 键</Label>
                 <Button x:Name="Btn_SetStopKey" Click="Btn_SetStopKey_Click" Grid.Row="1" Grid.Column="1" Margin="0,3" FontSize="11">XBUTTON2</Button>
                 <Label Grid.Row="2" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">暂 停 键</Label>
-                <Button x:Name="Btn_SetPauseKey" Click="Btn_SetPauseKey_Click" Grid.Row="2" Grid.Column="1" Margin="0,3" FontSize="11" IsEnabled="False">LALT</Button>
+                <Button x:Name="Btn_SetPauseKey" Click="Btn_SetPauseKey_Click" Grid.Row="2" Grid.Column="1" Margin="0,3" FontSize="11">LALT</Button>
                 <Label Grid.Row="3" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">按键模式</Label>
                 <ComboBox x:Name="Cb_KeyMode" Grid.Row="3" Grid.Column="1" Margin="0,3" SelectedIndex="0" IsEnabled="False">
                     <ComboBoxItem IsSelected="True">顺序模式</ComboBoxItem>
