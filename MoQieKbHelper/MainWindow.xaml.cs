@@ -45,7 +45,10 @@ namespace MoQieKbHelper
             ToolSettingHandler.Instance.LockUpdate();
             InitializeComponent();
             ToolSettingHandler.Instance.UnlockUpdate();
+        }
 
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
             // 设置标题
             this.Title = "墨切按键 - " + VERSION;
 
@@ -134,16 +137,11 @@ namespace MoQieKbHelper
             _lockElement.Add(Btn_SetStartKey);
             _lockElement.Add(Btn_SetStopKey);
             _lockElement.Add(Btn_SetPauseKey);
-            //_lockElement.Add(Cb_KeyMode);
+            _lockElement.Add(Cb_KeyMode);
             _lockElement.Add(Tb_KeyInterval);
             _lockElement.Add(Cb_Sound);
             _lockElement.Add(Lb_KeyList);
             #endregion
-        }
-
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            
         }
 
         private void KeyListUpdate(object s, object e)
@@ -748,6 +746,11 @@ namespace MoQieKbHelper
         {
             // 更新配置文件
             ToolSettingHandler.Instance.UpdateSound(Cb_Sound.IsChecked.Value);
+        }
+
+        private void Cb_KeyMode_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+
         }
     }
 }
