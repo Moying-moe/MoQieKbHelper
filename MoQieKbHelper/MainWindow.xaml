@@ -105,7 +105,7 @@
                 <Label Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center">单击右侧按钮来设置快捷键 按Esc清除</Label>
             </Grid>
             <CheckBox Checked="Cb_Sound_Updated" Unchecked="Cb_Sound_Updated" x:Name="Cb_Sound" Grid.Row="2" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center" IsChecked="True">声音提示</CheckBox>
-            <Button Click="Btn_OtherSetting_Click" Grid.Row="2" Grid.Column="1" FontSize="12">其他设置</Button>
+            <Button Click="Btn_OtherSetting_Click" Grid.Row="2" Grid.Column="1" FontSize="12" IsEnabled="False">其他设置</Button>
         </Grid>
 
         <Label Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" FontSize="8" Foreground="#FF484848" HorizontalAlignment="Right" VerticalAlignment="Bottom" Padding="0,0,3,2">
