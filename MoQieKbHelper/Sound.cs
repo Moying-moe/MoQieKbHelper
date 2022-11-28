@@ -1,5 +1,5 @@
 ﻿/*
-  Copyright (c) Moying-moe All rights reserved. Licensed under the MIT license.
+  Copyright (c) Moying-moe All rights reserved. Licensed under the GPL-v3.0 license.
   See LICENSE in the project root for license information.
 */
 
