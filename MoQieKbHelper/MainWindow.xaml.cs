@@ -18,7 +18,7 @@ namespace MoQieKbHelper
     /// </summary>
     public partial class MainWindow : Window
     {
-        public static readonly string VERSION = "v0.2.0-alpha";
+        public static readonly string VERSION = "v0.2.1-alpha";
 
         private readonly SolidColorBrush Default_BtnBorder = new SolidColorBrush(Color.FromArgb(255, 112, 112, 112));
         private readonly SolidColorBrush Default_BtnBackground = new SolidColorBrush(Color.FromArgb(255, 221, 221, 221));
@@ -482,12 +482,16 @@ namespace MoQieKbHelper
                     break;
                 case 2:
                     // 武学助手模式
-                    // 松开按键
-                    foreach (KeyListItem item in _keyListItems)
+                    _isTimerPaused = true;
+                    if (_isTimerRunning)
                     {
-                        if (item.Enabled)
+                        // 松开按键
+                        foreach (KeyListItem item in _keyListItems)
                         {
-                            SuperKeyboard.Instance.KeyUp(item.KeyCode);
+                            if (item.Enabled)
+                            {
+                                SuperKeyboard.Instance.KeyUp(item.KeyCode);
+                            }
                         }
                     }
                     break;
@@ -508,12 +512,16 @@ namespace MoQieKbHelper
                     break;
                 case 2:
                     // 武学助手模式
-                    // 按下按键
-                    foreach (KeyListItem item in _keyListItems)
+                    _isTimerPaused = false;
+                    if (_isTimerRunning)
                     {
-                        if (item.Enabled)
+                        // 按下按键
+                        foreach (KeyListItem item in _keyListItems)
                         {
-                            SuperKeyboard.Instance.KeyDown(item.KeyCode);
+                            if (item.Enabled)
+                            {
+                                SuperKeyboard.Instance.KeyDown(item.KeyCode);
+                            }
                         }
                     }
                     break;
