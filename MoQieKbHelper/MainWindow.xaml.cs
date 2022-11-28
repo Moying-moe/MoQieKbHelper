@@ -18,7 +18,7 @@ namespace MoQieKbHelper
     /// </summary>
     public partial class MainWindow : Window
     {
-        public static readonly string VERSION = "v0.1.0-alpha";
+        public static readonly string VERSION = "v0.2.0-alpha";
 
         private readonly SolidColorBrush Default_BtnBorder = new SolidColorBrush(Color.FromArgb(255, 112, 112, 112));
         private readonly SolidColorBrush Default_BtnBackground = new SolidColorBrush(Color.FromArgb(255, 221, 221, 221));
@@ -87,7 +87,6 @@ namespace MoQieKbHelper
             Tb_KeyInterval.Text = ToolSettingHandler.Instance.Setting.KeyInterval.ToString();
             _timer.Interval = TimeSpan.FromMilliseconds(ToolSettingHandler.Instance.Setting.KeyInterval);
             _timer.Tick += Timer_Tick;
-            _timer.Start();
 
             // 热键
             _curSettingButton = SettingButton.Start;
@@ -142,6 +141,8 @@ namespace MoQieKbHelper
             _lockElement.Add(Cb_Sound);
             _lockElement.Add(Lb_KeyList);
             #endregion
+
+            _timer.Start();
         }
 
         /// <summary>
@@ -325,9 +326,6 @@ namespace MoQieKbHelper
                     }
                     break;
                 case 2:
-                    // 连发模式
-                    break;
-                case 3:
                     // 武学助手模式
                     break;
             }
@@ -368,9 +366,6 @@ namespace MoQieKbHelper
                     // 长按模式
                     break;
                 case 2:
-                    // 连发模式
-                    break;
-                case 3:
                     // 武学助手模式
                     if (!_isTimerRunning)
                     {
@@ -438,9 +433,6 @@ namespace MoQieKbHelper
                     // 长按模式
                     break;
                 case 2:
-                    // 连发模式
-                    break;
-                case 3:
                     // 武学助手模式
                     if (_isTimerRunning)
                     {
@@ -480,18 +472,15 @@ namespace MoQieKbHelper
         {
             switch (_keyMode)
             {
-                case 1:
+                case 0:
                     // 顺序模式
                     _isTimerPaused = true;
                     break;
-                case 2:
+                case 1:
                     // 按压模式
                     _isTimerPaused = true;
                     break;
-                case 3:
-                    // 连发模式
-                    break;
-                case 4:
+                case 2:
                     // 武学助手模式
                     // 松开按键
                     foreach (KeyListItem item in _keyListItems)
@@ -509,18 +498,15 @@ namespace MoQieKbHelper
         {
             switch (_keyMode)
             {
-                case 1:
+                case 0:
                     // 顺序模式
                     _isTimerPaused = false;
                     break;
-                case 2:
+                case 1:
                     // 按压模式
                     _isTimerPaused = false;
                     break;
-                case 3:
-                    // 连发模式
-                    break;
-                case 4:
+                case 2:
                     // 武学助手模式
                     // 按下按键
                     foreach (KeyListItem item in _keyListItems)
@@ -913,7 +899,6 @@ namespace MoQieKbHelper
 
             // 更新配置文件
             ToolSettingHandler.Instance.UpdateKeyInterval(interval);
-
             _timer.Interval = TimeSpan.FromMilliseconds(interval);
         }
         #endregion
@@ -950,6 +935,7 @@ namespace MoQieKbHelper
             {
                 return;
             }
+
             Lb_SetStart.TextDecorations = null;
             Lb_SetStop.TextDecorations = null;
             Lb_SetPause.TextDecorations = null;
@@ -974,13 +960,6 @@ namespace MoQieKbHelper
                     break;
                 case 2:
                     _keyMode = 2;
-                    Lb_SetStart.TextDecorations = TextDecorations.Strikethrough;
-                    Lb_SetStop.TextDecorations = TextDecorations.Strikethrough;
-                    Lb_SetPause.TextDecorations = TextDecorations.Strikethrough;
-                    SetTooltip("连发模式: 启动后，长按列表中勾选的按键时，会变为快速连按直到松开");
-                    break;
-                case 3:
-                    _keyMode = 3;
                     Lb_KeyInterval.TextDecorations = TextDecorations.Strikethrough;
                     SetTooltip("武学助手模式: 启动后会按住列表中勾选的按键，直到停止。如果中途失效，请按暂停键或先停止再开启。");
                     break;

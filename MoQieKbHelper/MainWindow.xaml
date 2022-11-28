@@ -94,7 +94,6 @@
                 <ComboBox SelectionChanged="Cb_KeyMode_SelectionChanged" x:Name="Cb_KeyMode" Grid.Row="3" Grid.Column="1" Margin="0,3" SelectedIndex="-1">
                     <ComboBoxItem>顺序模式</ComboBoxItem>
                     <ComboBoxItem>按压模式</ComboBoxItem>
-                    <ComboBoxItem IsEnabled="False">连发模式</ComboBoxItem>
                     <ComboBoxItem>武学助手模式</ComboBoxItem>
                 </ComboBox>
                 <Label Grid.Row="4" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">

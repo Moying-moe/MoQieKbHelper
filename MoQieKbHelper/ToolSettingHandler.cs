@@ -34,24 +34,6 @@ namespace MoQieKbHelper
         {
             _settingObj = new ToolSetting();
 
-            _settingObj.StartKey = new HotkeyInfo()
-            {
-                IsMouse = true,
-                KeyCode = Mouse.XBUTTON1DOWN,
-            };
-            _settingObj.StopKey = new HotkeyInfo()
-            {
-                IsMouse = true,
-                KeyCode = Mouse.XBUTTON2DOWN,
-            };
-            _settingObj.PauseKey = new HotkeyInfo()
-            {
-                IsMouse = false,
-                KeyCode = Key.VK_LMENU,
-            };
-            _settingObj.KeyMode = 0;
-            _settingObj.KeyInterval = 50;
-            _settingObj.Sound = true;
             _settingObj.KeyList.Add(new KeyItem() { Key = Key.VK_F9, Enabled = true });
             _settingObj.KeyList.Add(new KeyItem() { Key = Key.VK_F10, Enabled = false });
 
