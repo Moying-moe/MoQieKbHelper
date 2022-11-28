@@ -31,7 +31,6 @@ namespace MoQieKbHelper
             public bool Enabled { get; set; }
         }
 
-        private bool _status = false;
         private long _toggleTime = 0;
 
         private List<byte> _keys = new List<byte>();                         // 用户添加的需要按下的键
@@ -88,6 +87,7 @@ namespace MoQieKbHelper
             Tb_KeyInterval.Text = ToolSettingHandler.Instance.Setting.KeyInterval.ToString();
             _timer.Interval = TimeSpan.FromMilliseconds(ToolSettingHandler.Instance.Setting.KeyInterval);
             _timer.Tick += Timer_Tick;
+            _timer.Start();
 
             // 热键
             _curSettingButton = SettingButton.Start;
@@ -144,6 +144,11 @@ namespace MoQieKbHelper
             #endregion
         }
 
+        /// <summary>
+        /// 按键列表更新
+        /// </summary>
+        /// <param name="s"></param>
+        /// <param name="e"></param>
         private void KeyListUpdate(object s, object e)
         {
             ToolSettingHandler.Instance.UpdateKeyList(_keyListItems);
@@ -156,6 +161,7 @@ namespace MoQieKbHelper
         /// <param name="content"></param>
         private void SetTooltip(string content)
         {
+            if (Lb_Tooltip is null) return;
             Lb_Tooltip.Text = content;
         }
 
@@ -283,84 +289,249 @@ namespace MoQieKbHelper
         #region Timer
         private DispatcherTimer _timer = new DispatcherTimer();
         private bool _isTimerPaused = false;
+        private bool _isTimerRunning = false;
 
         private void Timer_Tick(object sender, EventArgs e) {
-            if (_isTimerPaused)
+            switch (_keyMode)
             {
-                return;
-            }
-            foreach (KeyListItem item in _keyListItems)
-            {
-                if (item.Enabled)
-                {
-                    Console.WriteLine(item.KeyCode + "," + Key.GetKeyName(item.KeyCode));
-                    SuperKeyboard.Instance.KeyPress(item.KeyCode);
-                }
+                case 0:
+                    // 顺序模式
+                    if (!_isTimerRunning || _isTimerPaused)
+                    {
+                        return;
+                    }
+                    foreach (KeyListItem item in _keyListItems)
+                    {
+                        if (item.Enabled)
+                        {
+                            SuperKeyboard.Instance.KeyPress(item.KeyCode);
+                        }
+                    }
+                    break;
+                case 1:
+                    // 长按模式
+                    if (!_isTimerPaused)
+                    {
+                        // 长按模式下 Pause键才是开关按键的控制键 所以当按键被“Pause”的时候 才会开始运行
+                        // 反之 如果_isTimerPaused == false 那么就不运行
+                        return;
+                    }
+                    foreach (KeyListItem item in _keyListItems)
+                    {
+                        if (item.Enabled)
+                        {
+                            SuperKeyboard.Instance.KeyPress(item.KeyCode);
+                        }
+                    }
+                    break;
+                case 2:
+                    // 连发模式
+                    break;
+                case 3:
+                    // 武学助手模式
+                    break;
             }
         }
         #endregion
 
         #region Tool控制
+        private int _keyMode = 0;
+
         private void ToolOn()
         {
-            if (!_status)
+            switch (_keyMode)
             {
-                if (Tools.Instance.GetTime() < _toggleTime)
-                {
-                    return;
-                }
+                case 0:
+                    if (!_isTimerRunning)
+                    {
+                        if (Tools.Instance.GetTime() < _toggleTime)
+                        {
+                            return;
+                        }
 
-                _toggleTime = Tools.Instance.GetTime() + 100;
+                        _toggleTime = Tools.Instance.GetTime() + 100;
 
-                _status = true;
-                _timer.Start();
+                        _isTimerRunning = true;
 
-                foreach (UIElement element in _lockElement)
-                {
-                    element.IsEnabled = false;
-                }
+                        foreach (UIElement element in _lockElement)
+                        {
+                            element.IsEnabled = false;
+                        }
 
-                if (Cb_Sound.IsChecked.Value)
-                {
-                    Sound.Instance.PlayStart();
-                }
+                        if (Cb_Sound.IsChecked.Value)
+                        {
+                            Sound.Instance.PlayStart();
+                        }
+                    }
+                    break;
+                case 1:
+                    // 长按模式
+                    break;
+                case 2:
+                    // 连发模式
+                    break;
+                case 3:
+                    // 武学助手模式
+                    if (!_isTimerRunning)
+                    {
+                        if (Tools.Instance.GetTime() < _toggleTime)
+                        {
+                            return;
+                        }
+
+                        _toggleTime = Tools.Instance.GetTime() + 100;
+
+                        _isTimerRunning = true;
+
+                        foreach (UIElement element in _lockElement)
+                        {
+                            element.IsEnabled = false;
+                        }
+
+                        // 按下按键
+                        foreach (KeyListItem item in _keyListItems)
+                        {
+                            if (item.Enabled)
+                            {
+                                SuperKeyboard.Instance.KeyDown(item.KeyCode);
+                            }
+                        }
+
+                        if (Cb_Sound.IsChecked.Value)
+                        {
+                            Sound.Instance.PlayStart();
+                        }
+                    }
+                    break;
             }
         }
 
         private void ToolOff()
         {
-            if (_status)
+            switch (_keyMode)
             {
-                if (Tools.Instance.GetTime() < _toggleTime)
-                {
-                    return;
-                }
+                case 0:
+                    // 顺序模式
+                    if (_isTimerRunning)
+                    {
+                        if (Tools.Instance.GetTime() < _toggleTime)
+                        {
+                            return;
+                        }
 
-                _toggleTime = Tools.Instance.GetTime() + 100;
+                        _toggleTime = Tools.Instance.GetTime() + 100;
 
-                _status = false;
-                _timer.Stop();
+                        _isTimerRunning = false;
 
-                foreach (UIElement element in _lockElement)
-                {
-                    element.IsEnabled = true;
-                }
+                        foreach (UIElement element in _lockElement)
+                        {
+                            element.IsEnabled = true;
+                        }
 
-                if (Cb_Sound.IsChecked.Value)
-                {
-                    Sound.Instance.PlayStop();
-                }
+                        if (Cb_Sound.IsChecked.Value)
+                        {
+                            Sound.Instance.PlayStop();
+                        }
+                    }
+                    break;
+                case 1:
+                    // 长按模式
+                    break;
+                case 2:
+                    // 连发模式
+                    break;
+                case 3:
+                    // 武学助手模式
+                    if (_isTimerRunning)
+                    {
+                        if (Tools.Instance.GetTime() < _toggleTime)
+                        {
+                            return;
+                        }
+
+                        _toggleTime = Tools.Instance.GetTime() + 100;
+
+                        _isTimerRunning = false;
+
+                        foreach (UIElement element in _lockElement)
+                        {
+                            element.IsEnabled = true;
+                        }
+
+                        // 松开按键
+                        foreach (KeyListItem item in _keyListItems)
+                        {
+                            if (item.Enabled)
+                            {
+                                SuperKeyboard.Instance.KeyUp(item.KeyCode);
+                            }
+                        }
+
+                        if (Cb_Sound.IsChecked.Value)
+                        {
+                            Sound.Instance.PlayStop();
+                        }
+                    }
+                    break;
             }
         }
 
         private void ToolPauseOn()
         {
-            _isTimerPaused = true;
+            switch (_keyMode)
+            {
+                case 1:
+                    // 顺序模式
+                    _isTimerPaused = true;
+                    break;
+                case 2:
+                    // 按压模式
+                    _isTimerPaused = true;
+                    break;
+                case 3:
+                    // 连发模式
+                    break;
+                case 4:
+                    // 武学助手模式
+                    // 松开按键
+                    foreach (KeyListItem item in _keyListItems)
+                    {
+                        if (item.Enabled)
+                        {
+                            SuperKeyboard.Instance.KeyUp(item.KeyCode);
+                        }
+                    }
+                    break;
+            }
         }
 
         private void ToolPauseOff()
         {
-            _isTimerPaused = false;
+            switch (_keyMode)
+            {
+                case 1:
+                    // 顺序模式
+                    _isTimerPaused = false;
+                    break;
+                case 2:
+                    // 按压模式
+                    _isTimerPaused = false;
+                    break;
+                case 3:
+                    // 连发模式
+                    break;
+                case 4:
+                    // 武学助手模式
+                    // 按下按键
+                    foreach (KeyListItem item in _keyListItems)
+                    {
+                        if (item.Enabled)
+                        {
+                            SuperKeyboard.Instance.KeyDown(item.KeyCode);
+                        }
+                    }
+                    break;
+            }
         }
 
         #endregion
@@ -702,11 +873,21 @@ namespace MoQieKbHelper
         }
         #endregion
 
+        /// <summary>
+        /// 查询宏
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Btn_MarcoWebsite_Click(object sender, RoutedEventArgs e)
         {
             Tools.Instance.OpenUrlInBrowser("https://www.jx3box.com/macro/#/");
         }
 
+        /// <summary>
+        /// 打开github
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Lb_GithubLink_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ChangedButton == MouseButton.Left)
@@ -737,20 +918,74 @@ namespace MoQieKbHelper
         }
         #endregion
 
+        /// <summary>
+        /// 其他设置
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Btn_OtherSetting_Click(object sender, RoutedEventArgs e)
         {
             //ToolSettingHandler.Instance.SaveSetting();
         }
 
+        /// <summary>
+        /// 声音开关
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Cb_Sound_Updated(object sender, RoutedEventArgs e)
         {
             // 更新配置文件
             ToolSettingHandler.Instance.UpdateSound(Cb_Sound.IsChecked.Value);
         }
 
+        /// <summary>
+        /// 切换模式
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Cb_KeyMode_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
+            if (Cb_KeyMode.SelectedIndex == -1)
+            {
+                return;
+            }
+            Lb_SetStart.TextDecorations = null;
+            Lb_SetStop.TextDecorations = null;
+            Lb_SetPause.TextDecorations = null;
+            Lb_SetPause.Text = "暂 停 键";
+            Lb_KeyInterval.TextDecorations = null;
 
+            _isTimerRunning = false;
+            _isTimerPaused = false;
+
+            switch (Cb_KeyMode.SelectedIndex)
+            {
+                case 0:
+                    _keyMode = 0;
+                    SetTooltip("顺序模式: 启动后从上向下依次按下列表中勾选的按键");
+                    break;
+                case 1:
+                    _keyMode = 1;
+                    Lb_SetStart.TextDecorations = TextDecorations.Strikethrough;
+                    Lb_SetStop.TextDecorations = TextDecorations.Strikethrough;
+                    Lb_SetPause.Text = "按 压 键";
+                    SetTooltip("按压模式: 按住\"按压键\"以后从上向下依次按下列表中勾选的按键");
+                    break;
+                case 2:
+                    _keyMode = 2;
+                    Lb_SetStart.TextDecorations = TextDecorations.Strikethrough;
+                    Lb_SetStop.TextDecorations = TextDecorations.Strikethrough;
+                    Lb_SetPause.TextDecorations = TextDecorations.Strikethrough;
+                    SetTooltip("连发模式: 启动后，长按列表中勾选的按键时，会变为快速连按直到松开");
+                    break;
+                case 3:
+                    _keyMode = 3;
+                    Lb_KeyInterval.TextDecorations = TextDecorations.Strikethrough;
+                    SetTooltip("武学助手模式: 启动后会按住列表中勾选的按键，直到停止。如果中途失效，请按暂停键或先停止再开启。");
+                    break;
+            }
+            ToolSettingHandler.Instance.UpdateKeyMode(_keyMode);
         }
     }
 }

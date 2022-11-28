@@ -19,9 +19,6 @@
             <ColumnDefinition Width="1*" />
         </Grid.ColumnDefinitions>
 
-        <!--<Label Grid.Row="0" Grid.Column="0" VerticalAlignment="Bottom" Padding="0,0,0,-2">
-            <TextBlock x:Name="LabelLog" TextWrapping="Wrap" Text="" FontSize="12" VerticalAlignment="Bottom"/>
-        </Label>-->
         <TextBox x:Name="Tb_KeyInput" GotFocus="Tb_KeyInput_GotFocus" LostFocus="Tb_KeyInput_LostFocus" KeyDown="Tb_KeyInput_KeyDown"
                  Grid.Row="0" Grid.Column="0" Margin="15,5" IsReadOnly="True" IsUndoEnabled="False" FontSize="15" InputMethod.IsInputMethodEnabled="False"
                  HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontFamily="Microsoft YaHei" Text="点此输入按键"></TextBox>
@@ -81,20 +78,28 @@
                     <ColumnDefinition Width="3*" />
                 </Grid.ColumnDefinitions>
 
-                <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">启 动 键</Label>
+                <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock x:Name="Lb_SetStart" Text="启 动 键" />
+                </Label>
                 <Button x:Name="Btn_SetStartKey" Click="Btn_SetStartKey_Click" Grid.Row="0" Grid.Column="1" Margin="0,3" FontSize="11">XBUTTON1</Button>
-                <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">停 止 键</Label>
+                <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock x:Name="Lb_SetStop" Text="停 止 键" />
+                </Label>
                 <Button x:Name="Btn_SetStopKey" Click="Btn_SetStopKey_Click" Grid.Row="1" Grid.Column="1" Margin="0,3" FontSize="11">XBUTTON2</Button>
-                <Label Grid.Row="2" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">暂 停 键</Label>
+                <Label Grid.Row="2" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock x:Name="Lb_SetPause" Text="暂 停 键" />
+                </Label>
                 <Button x:Name="Btn_SetPauseKey" Click="Btn_SetPauseKey_Click" Grid.Row="2" Grid.Column="1" Margin="0,3" FontSize="11">LALT</Button>
                 <Label Grid.Row="3" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">按键模式</Label>
-                <ComboBox SelectionChanged="Cb_KeyMode_SelectionChanged" x:Name="Cb_KeyMode" Grid.Row="3" Grid.Column="1" Margin="0,3" SelectedIndex="0">
-                    <ComboBoxItem IsSelected="True">顺序模式</ComboBoxItem>
+                <ComboBox SelectionChanged="Cb_KeyMode_SelectionChanged" x:Name="Cb_KeyMode" Grid.Row="3" Grid.Column="1" Margin="0,3" SelectedIndex="-1">
+                    <ComboBoxItem>顺序模式</ComboBoxItem>
                     <ComboBoxItem>按压模式</ComboBoxItem>
-                    <ComboBoxItem>连发模式</ComboBoxItem>
+                    <ComboBoxItem IsEnabled="False">连发模式</ComboBoxItem>
                     <ComboBoxItem>武学助手模式</ComboBoxItem>
                 </ComboBox>
-                <Label Grid.Row="4" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">按键间隔</Label>
+                <Label Grid.Row="4" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock x:Name="Lb_KeyInterval" Text="按键间隔" />
+                </Label>
                 <TextBox x:Name="Tb_KeyInterval" Grid.Row="4" Grid.Column="1" Margin="0,3" InputMethod.IsInputMethodEnabled="False"
                          VerticalAlignment="Center" Padding="5,4" TextAlignment="Center"
                          PreviewTextInput="Tb_KeyInterval_PreviewTextInput" TextChanged="Tb_KeyInterval_TextChanged" FontSize="12">50</TextBox>
@@ -111,7 +116,7 @@
             <TextBlock TextWrapping="Wrap" Text="Github" TextAlignment="left" TextDecorations="Underline" Cursor="Hand" />
         </Label>
         <Label Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" FontSize="12"
-               HorizontalAlignment="left" VerticalAlignment="Bottom" Padding="50,0,0,2" Width="340">
+               HorizontalAlignment="left" VerticalAlignment="Bottom" Padding="50,0,0,2" Width="340" Foreground="#FF009B00">
             <TextBlock x:Name="Lb_Tooltip" TextWrapping="Wrap" TextAlignment="Left" />
         </Label>
     </Grid>

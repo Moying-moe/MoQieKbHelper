@@ -43,5 +43,10 @@ namespace MoQieKbHelper
             TimeSpan ts = (timeUTC - dd);
             return (Int64)ts.TotalMilliseconds;//精确到毫秒
         }
+
+        public void Debug(params object[] infos)
+        {
+            Console.WriteLine(String.Join(", ", infos));
+        }
     }
 }

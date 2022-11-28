@@ -3,12 +3,12 @@
   See LICENSE in the project root for license information.
 */
 
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Runtime.InteropServices;
-using Newtonsoft.Json;
 using static SuperIo.SuperIo;
 
 namespace MoQieKbHelper
@@ -30,6 +30,34 @@ namespace MoQieKbHelper
             LoadSetting();
         }
 
+        public void CreateDefaultSetting()
+        {
+            _settingObj = new ToolSetting();
+
+            _settingObj.StartKey = new HotkeyInfo()
+            {
+                IsMouse = true,
+                KeyCode = Mouse.XBUTTON1DOWN,
+            };
+            _settingObj.StopKey = new HotkeyInfo()
+            {
+                IsMouse = true,
+                KeyCode = Mouse.XBUTTON2DOWN,
+            };
+            _settingObj.PauseKey = new HotkeyInfo()
+            {
+                IsMouse = false,
+                KeyCode = Key.VK_LMENU,
+            };
+            _settingObj.KeyMode = 0;
+            _settingObj.KeyInterval = 50;
+            _settingObj.Sound = true;
+            _settingObj.KeyList.Add(new KeyItem() { Key = Key.VK_F9, Enabled = true });
+            _settingObj.KeyList.Add(new KeyItem() { Key = Key.VK_F10, Enabled = false });
+
+            SaveSetting();
+        }
+
         public void LoadSetting()
         {
             if (!(_settingObj is null))
@@ -39,8 +67,7 @@ namespace MoQieKbHelper
 
             if (!File.Exists(SETTING_PATH))
             {
-                _settingObj = new ToolSetting();
-                SaveSetting();
+                CreateDefaultSetting();
                 return;
             }
 
@@ -182,12 +209,7 @@ namespace MoQieKbHelper
         public int KeyMode = 0;
         public int KeyInterval = 50;
         public bool Sound = true;
-        public List<KeyItem> KeyList = new List<KeyItem>(
-            new KeyItem[] {
-                new KeyItem() { Key = Key.VK_F9, Enabled = true },
-                new KeyItem() { Key = Key.VK_F10, Enabled = false }
-            }
-        );
+        public List<KeyItem> KeyList = new List<KeyItem>();
     }
 
     [StructLayout(LayoutKind.Sequential)]
